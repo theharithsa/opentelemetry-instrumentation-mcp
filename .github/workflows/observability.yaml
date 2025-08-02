@@ -1,0 +1,20 @@
+
+name: OpenTelemetry
+on:
+  workflow_run:
+    workflows:
+      - Publish MCP Instrumentation to NPM
+    types:
+      - completed
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: plengauer/opentelemetry-github/actions/instrument/workflow@v5.21.0
+        env:
+          OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
+          OTEL_EXPORTER_OTLP_HEADERS: Authorization=Api-Token ${{ secrets.DYNATRACE_API_TOKEN }}
+          OTEL_SERVICE_NAME: dynatrace-mcp-server-build
+          OTEL_RESOURCE_ATTRIBUTES: service.version=${{ steps['package-version'].outputs.version }},deployment.environment=${{ (github.ref_name == 'main' && 'production') || 'development' }}
+    permissions:
+      actions: read

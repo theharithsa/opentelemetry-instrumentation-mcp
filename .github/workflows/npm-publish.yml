@@ -19,6 +19,7 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: NPM Deploy
 
     steps:
       - name: Check out repository
@@ -59,6 +60,22 @@ jobs:
         if: steps.version-check.outputs.should_publish == 'true'
         run: npm run build --if-present
 
+      - name: Verify npm authentication
+        if: |
+          steps.version-check.outputs.should_publish == 'true' &&
+          (github.event_name == 'workflow_dispatch' ||
+           (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')) ||
+           (github.event_name == 'pull_request' && github.event.pull_request.merged))
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "Error: NPM_TOKEN secret is not set"
+            exit 1
+          fi
+          echo "Verifying npm authentication..."
+          npm whoami || (echo "Error: npm authentication failed" && exit 1)
+
       - name: Publish to NPM
         if: |
           steps.version-check.outputs.should_publish == 'true' &&
@@ -69,7 +86,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           echo "Publishing version ${{ steps.package-version.outputs.version }} to npm..."
-          npm publish --access public
+          npm publish --access public --verbose
 
       - name: Skip publish
         if: steps.version-check.outputs.should_publish == 'false'

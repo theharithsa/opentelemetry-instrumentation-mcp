@@ -1,0 +1,21 @@
+{
+  "name": "@theharithsa/opentelemetry-instrumentation-mcp",
+  "version": "0.0.1",
+  "description": "A package to auto instrument the Model Context Protocol (MCP) SDK with OpenTelemetry",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["mcp", "opentelemetry", "instrumentation"],
+  "author": "Vishruth Harithsa",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/instrumentation": "^0.203.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.1.0",
+    "typescript": "^5.9.2"
+  }
+}

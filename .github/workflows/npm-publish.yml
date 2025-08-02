@@ -1,9 +1,7 @@
 name: Publish MCP Instrumentation to NPM
-
 # This workflow publishes the custom OpenTelemetry instrumentation package to
 # the public npm registry whenever a new version is merged into the `main`
 # branch.  You can also trigger it manually from the Actions tab.
-
 on:
   push:
     branches: ["main"]
@@ -11,31 +9,35 @@ on:
     branches: ["main"]
     types: ["closed"]
   workflow_dispatch:
-
 permissions:
-  contents: write  # allow creating Git tags and releases
-  packages: write  # allow publishing to GitHub Packages (optional)
-
+  contents: write # allow creating Git tags and releases
+  packages: write # allow publishing to GitHub Packages (optional)
+  actions: read
 jobs:
   publish:
     runs-on: ubuntu-latest
     environment: NPM Deploy
 
     steps:
+      - uses: plengauer/opentelemetry-github/actions/instrument/job@v5.21.0
+        env:
+          OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
+          OTEL_EXPORTER_OTLP_HEADERS: Authorization=Api-Token ${{ secrets.DYNATRACE_API_TOKEN }}
+          OTEL_SERVICE_NAME: dynatrace-mcp-server-build
+          OTEL_RESOURCE_ATTRIBUTES: service.version=${{ steps['package-version'].outputs.version }},deployment.environment=${{ (github.ref_name == 'main' && 'production') || 'development' }}
+        with:
+          secrets_to_redact: '["${{ github.token }}","${{ secrets.NPM_TOKEN }}"]'
       - name: Check out repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
           registry-url: https://registry.npmjs.org/
-
       - name: Install dependencies
         run: npm ci --ignore-scripts
-
       - name: Get package version
         id: package-version
         run: |
@@ -44,7 +46,6 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
           echo "Current package version: $VERSION"
-
       - name: Check if version exists on npm
         id: version-check
         run: |
@@ -55,7 +56,6 @@ jobs:
             echo "should_publish=true" >> $GITHUB_OUTPUT
             echo "Version ${{ steps.package-version.outputs.version }} is new, will publish"
           fi
-
       - name: Build package
         if: steps.version-check.outputs.should_publish == 'true'
         run: npm run build --if-present
@@ -87,8 +87,9 @@ jobs:
         run: |
           echo "Publishing version ${{ steps.package-version.outputs.version }} to npm..."
           npm publish --access public --verbose
-
       - name: Skip publish
         if: steps.version-check.outputs.should_publish == 'false'
         run: |
           echo "Skipping publish - version ${{ steps.package-version.outputs.version }} already exists on npm"
+    permissions:
+      actions: read

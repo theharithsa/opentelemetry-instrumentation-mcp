@@ -17,7 +17,6 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     environment: NPM Deploy
-
     steps:
       - uses: plengauer/opentelemetry-github/actions/instrument/job@v5.21.0
         env:
@@ -59,7 +58,6 @@ jobs:
       - name: Build package
         if: steps.version-check.outputs.should_publish == 'true'
         run: npm run build --if-present
-
       - name: Verify npm authentication
         if: |
           steps.version-check.outputs.should_publish == 'true' &&
@@ -75,7 +73,6 @@ jobs:
           fi
           echo "Verifying npm authentication..."
           npm whoami || (echo "Error: npm authentication failed" && exit 1)
-
       - name: Publish to NPM
         if: |
           steps.version-check.outputs.should_publish == 'true' &&

@@ -29,11 +29,12 @@ export function register() {
     ],
   });
 
-sdk.start().then((): void => {
+try {
+    sdk.start();
     console.error('[otel] ✅ OpenTelemetry SDK started by MCP instrumentation');
-}).catch((err: Error): void => {
+} catch (err) {
     console.error('[otel] ❌ Failed to start OpenTelemetry SDK:', err);
-});
+}
 
   return sdk;
 }

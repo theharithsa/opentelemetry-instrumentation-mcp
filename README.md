@@ -2,6 +2,8 @@
 
 Automatic OpenTelemetry instrumentation for the Model Context Protocol SDK, enabling observability and telemetry collection for MCP-based applications with zero configuration required.
 
+**Version 1.0.0** - Production ready with stable API.
+
 ## Features
 
 - 🔄 **Automatic instrumentation** of MCP tool calls
@@ -72,6 +74,68 @@ The instrumentation automatically creates spans for:
 - **Error Tracking**: Exceptions are recorded and spans are marked with error status
 - **Execution Context**: Full OpenTelemetry context propagation
 
+## Adding Custom Span Attributes
+
+You have two effective ways to enrich your traces with custom attributes:
+
+### Option 1: Set Attributes in Your Application Code (Recommended)
+
+Because `McpInstrumentation` calls your tool callback inside a context, the span it created is the current active span during the callback. You can grab it and attach any metadata you need:
+
+```typescript
+import { trace, context } from '@opentelemetry/api';
+
+tool('create_workflow', 'Create a workflow', { /* schema */ }, async (args) => {
+  // Derive the additional data you want to record
+  const modelName = args.model;
+  const apiName = 'workflowAPI'; // or compute dynamically
+
+  // Get the active span created by the instrumentation
+  const span = trace.getSpan(context.active());
+  if (span) {
+    span.setAttribute('mcp.tool', 'create_workflow');
+    span.setAttribute('model.name', modelName);
+    span.setAttribute('api.name', apiName);
+    span.setAttribute('workflow.type', args.workflowType);
+  }
+
+  // Perform the actual work
+  const result = await createWorkflow(args);
+  return `Workflow created: ${result.id}`;
+});
+```
+
+### Option 2: Add Default Attributes in Instrumentation
+
+If you want certain attributes added automatically for every tool without changing your application code, you can modify the instrumentation itself. In `McpInstrumentation`'s wrapper around `server.tool()`, you can set attributes before calling the user's callback:
+
+```typescript
+// Inside the wrapped callback in McpInstrumentation
+const tracer = instrumentation.tracer;
+const span = tracer.startSpan(`mcp.tool:${name}`);
+span.setAttribute('mcp.tool', name);
+
+// Optionally capture common metadata from args or extra
+if (args?.model) {
+  span.setAttribute('model.name', args.model);
+}
+if (extra?.caller) {
+  span.setAttribute('caller', extra.caller);
+}
+
+return context.with(trace.setSpan(context.active(), span), async () => {
+  // Call the original callback and handle status/errors...
+});
+```
+
+### Which Approach to Use?
+
+- **Per-tool attributes (Option 1)** give you maximum flexibility, as you can compute attributes using local variables and know exactly when they should be added.
+
+- **Instrumentation-level defaults (Option 2)** are useful for metadata that is always available and consistent (like the tool name). It keeps your application callbacks clean but is limited to information that your instrumentation can see.
+
+You can combine both approaches: set default attributes in the instrumentation and add specialized attributes in the application where needed. Either way, you're simply calling `span.setAttribute(key, value)` on the active span – OpenTelemetry will include those values in the trace export.
+
 ## Example Trace Output
 
 When your MCP tools are called, you'll see traces like:
@@ -120,6 +184,10 @@ If you were previously setting up OpenTelemetry manually:
 ## License
 
 ISC
+
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md) for detailed version history and breaking changes.
 
 ## Contributing
 

@@ -9,12 +9,13 @@
       "types": "./dist/index.d.ts",
       "require": "./dist/index.js",
       "import": "./dist/index.mjs"
-    }
+    },
+    "./register": "./dist/register.js"
   },
   "files": [
     "dist/",
     "README.md",
-    "LICENSE", 
+    "LICENSE",
     "package.json",
     "package-lock.json"
   ],
@@ -23,7 +24,13 @@
     "prepublishOnly": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["mcp", "opentelemetry", "instrumentation", "telemetry", "observability"],
+  "keywords": [
+    "mcp",
+    "opentelemetry",
+    "instrumentation",
+    "telemetry",
+    "observability"
+  ],
   "author": "Vishruth Harithsa",
   "license": "ISC",
   "type": "commonjs",
@@ -43,7 +50,10 @@
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",
-    "@opentelemetry/instrumentation": "^0.203.0"
+    "@opentelemetry/auto-instrumentations-node": "^0.62.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.203.0",
+    "@opentelemetry/instrumentation": "^0.203.0",
+    "@opentelemetry/sdk-node": "^0.203.0"
   },
   "devDependencies": {
     "@types/node": "^24.1.0",

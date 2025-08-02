@@ -72,3 +72,5 @@ jobs:
         if: steps.version-check.outputs.should_publish == 'false'
         run: |
           echo "Skipping publish - version ${{ steps.package-version.outputs.version }} already exists on npm"
+    permissions:
+      actions: read

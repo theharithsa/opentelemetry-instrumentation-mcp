@@ -23,7 +23,7 @@ jobs:
         env:
           OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
           OTEL_EXPORTER_OTLP_HEADERS: Authorization=Api-Token ${{ secrets.DYNATRACE_API_TOKEN }}
-          OTEL_SERVICE_NAME: dynatrace-mcp-server-build
+          OTEL_SERVICE_NAME: otel-mcp-package-build
           OTEL_RESOURCE_ATTRIBUTES: service.version=${{ steps['package-version'].outputs.version }},deployment.environment=${{ (github.ref_name == 'main' && 'production') || 'development' }}
         with:
           secrets_to_redact: '["${{ github.token }}","${{ secrets.NPM_TOKEN }}"]'

@@ -1,0 +1,77 @@
+name: Publish MCP Instrumentation to NPM
+
+# This workflow publishes the custom OpenTelemetry instrumentation package to
+# the public npm registry whenever a new version is merged into the `main`
+# branch.  You can also trigger it manually from the Actions tab.
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+    types: ["closed"]
+  workflow_dispatch:
+
+permissions:
+  contents: write  # allow creating Git tags and releases
+  packages: write  # allow publishing to GitHub Packages (optional)
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          registry-url: https://registry.npmjs.org/
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Get package version
+        id: package-version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
+          echo "Current package version: $VERSION"
+
+      - name: Check if version exists on npm
+        id: version-check
+        run: |
+          if npm view ${{ steps.package-version.outputs.package_name }}@${{ steps.package-version.outputs.version }} version 2>/dev/null; then
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+            echo "Version ${{ steps.package-version.outputs.version }} already exists on npm"
+          else
+            echo "should_publish=true" >> $GITHUB_OUTPUT
+            echo "Version ${{ steps.package-version.outputs.version }} is new, will publish"
+          fi
+
+      - name: Build package
+        if: steps.version-check.outputs.should_publish == 'true'
+        run: npm run build --if-present
+
+      - name: Publish to NPM
+        if: |
+          steps.version-check.outputs.should_publish == 'true' &&
+          (github.event_name == 'workflow_dispatch' ||
+           (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')) ||
+           (github.event_name == 'pull_request' && github.event.pull_request.merged))
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "Publishing version ${{ steps.package-version.outputs.version }} to npm..."
+          npm publish --access public
+
+      - name: Skip publish
+        if: steps.version-check.outputs.should_publish == 'false'
+        run: |
+          echo "Skipping publish - version ${{ steps.package-version.outputs.version }} already exists on npm"

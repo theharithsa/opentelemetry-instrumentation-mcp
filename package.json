@@ -3,13 +3,44 @@
   "version": "0.0.1",
   "description": "A package to auto instrument the Model Context Protocol (MCP) SDK with OpenTelemetry",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE", 
+    "package.json",
+    "package-lock.json"
+  ],
   "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["mcp", "opentelemetry", "instrumentation"],
+  "keywords": ["mcp", "opentelemetry", "instrumentation", "telemetry", "observability"],
   "author": "Vishruth Harithsa",
   "license": "ISC",
   "type": "commonjs",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/theharithsa/opentelemetry-instrumentation-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/theharithsa/opentelemetry-instrumentation-mcp/issues"
+  },
+  "homepage": "https://github.com/theharithsa/opentelemetry-instrumentation-mcp#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/instrumentation": "^0.203.0"

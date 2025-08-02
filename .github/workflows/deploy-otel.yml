@@ -1,0 +1,23 @@
+name: 'Deploy OpenTelemetry'
+on:
+  push:
+    branches: [main, master, dev]
+    paths:
+      - .github/workflows/**
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: NPM Deploy
+    concurrency:
+      group: otel-deploy-job
+    steps:
+      - uses: plengauer/Thoth/actions/instrument/deploy@v5.21.0
+        with:
+          github_token: '${{ secrets.DEPLOY_OBSERVABILITY_TOKEN }}'
+        env:
+          OTEL_EXPORTER_OTLP_ENDPOINT: '${{ vars.OTEL_EXPORTER_OTLP_ENDPOINT }}'
+          OTEL_EXPORTER_OTLP_HEADERS: Authorization=Api-Token ${{ secrets.DYNATRACE_API_TOKEN }}
+          OTEL_SERVICE_NAME: dynatrace-mcp-server-build
+          OTEL_RESOURCE_ATTRIBUTES: service.version=${{ steps['package-version'].outputs.version }},deployment.environment=${{ (github.ref_name == 'main' && 'production') || 'development' }}
+        

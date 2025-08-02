@@ -1,5 +1,10 @@
 # OpenTelemetry Instrumentation for Model Context Protocol (MCP)
 
+[![npm version](https://badge.fury.io/js/@theharithsa%2Fopentelemetry-instrumentation-mcp.svg)](https://www.npmjs.com/package/@theharithsa/opentelemetry-instrumentation-mcp)
+[![npm downloads](https://img.shields.io/npm/dm/@theharithsa/opentelemetry-instrumentation-mcp.svg)](https://www.npmjs.com/package/@theharithsa/opentelemetry-instrumentation-mcp)
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/theharithsa/opentelemetry-instrumentation-mcp/ci.yml?branch=main)](https://github.com/theharithsa/opentelemetry-instrumentation-mcp/actions)
+
 Automatic OpenTelemetry instrumentation for the Model Context Protocol SDK, enabling observability and telemetry collection for MCP-based applications with zero configuration required.
 
 **Version 1.0.0** - Production ready with stable API.

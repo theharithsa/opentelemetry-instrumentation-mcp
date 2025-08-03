@@ -7,7 +7,7 @@
 
 Automatic OpenTelemetry instrumentation for the Model Context Protocol SDK, enabling observability and telemetry collection for MCP-based applications with zero configuration required.
 
-**Version 1.0.0** - Production ready with stable API.
+**Version 1.0.2** - Production ready with stable API and parent span stitching solution.
 
 ## Features
 
@@ -17,6 +17,7 @@ Automatic OpenTelemetry instrumentation for the Model Context Protocol SDK, enab
 - 📈 **OTLP export** with Dynatrace support out of the box
 - 🔍 **Comprehensive tracing** of tool execution with error handling
 - ⚡ **Zero-code integration** - just import and go
+- 🔗 **Parent span stitching** - maintains trace context across tool executions
 
 ## Installation
 
@@ -79,82 +80,128 @@ The instrumentation automatically creates spans for:
 - **Error Tracking**: Exceptions are recorded and spans are marked with error status
 - **Execution Context**: Full OpenTelemetry context propagation
 
-## Adding Custom Span Attributes
+## Parent Span Stitching Solution
 
-You have two effective ways to enrich your traces with custom attributes:
+### The Challenge
 
-### Option 1: Set Attributes in Your Application Code (Recommended)
+By default, MCP tool executions may not maintain proper parent-child span relationships, leading to disconnected traces in complex applications.
 
-Because `McpInstrumentation` calls your tool callback inside a context, the span it created is the current active span during the callback. You can grab it and attach any metadata you need:
+### The Solution: Tool Wrapper Pattern
+
+Create a custom wrapper function around your tool definitions that establishes parent spans. The McpInstrumentation will automatically create child spans within this context:
 
 ```typescript
-import { trace, context } from '@opentelemetry/api';
+import { trace, context, SpanStatusCode, SpanKind } from '@opentelemetry/api';
 
-tool('create_workflow', 'Create a workflow', { /* schema */ }, async (args) => {
-  // Derive the additional data you want to record
-  const modelName = args.model;
-  const apiName = 'workflowAPI'; // or compute dynamically
+const tracer = trace.getTracer('your-application', '1.0.0');
 
-  // Get the active span created by the instrumentation
+const tool = (
+  name: string,
+  description: string,
+  paramsSchema: ZodRawShape,
+  cb: (args: z.infer<z.ZodObject<ZodRawShape>>, _extra?: any) => Promise<string>
+) => {
+  server.tool(name, description, paramsSchema, async (args, _extra) => {
+    return await tracer.startActiveSpan(
+      `Tool.${name}`,
+      {
+        kind: SpanKind.SERVER,
+        attributes: {
+          'Tool.name': name,
+          'Tool.args': JSON.stringify(args),
+        },
+      },
+      async (span) => {
+        try {
+          const result = await context.with(trace.setSpan(context.active(), span), async () => {
+            return await cb(args, _extra);
+          });
+          
+          span.setStatus({ code: SpanStatusCode.OK });
+          span.setAttributes({
+            'mcp.tool.result.length': result.length,
+            'mcp.tool.success': true,
+          });
+          
+          return {
+            content: [{ type: 'text', text: result }],
+          };
+        } catch (error: any) {
+          span.recordException(error);
+          span.setStatus({
+            code: SpanStatusCode.ERROR,
+            message: error.message,
+          });
+          span.setAttributes({
+            'mcp.tool.success': false,
+            'mcp.tool.error': error.message,
+          });
+          
+          return {
+            content: [{ type: 'text', text: `Unexpected error: ${error.message}` }],
+            isError: true,
+          };
+        } finally {
+          span.end();
+        }
+      }
+    );
+  });
+};
+```
+
+### How It Works
+
+1. **Parent Span Creation**: The wrapper creates a parent span named `Tool.${name}`
+2. **Automatic Child Spans**: McpInstrumentation detects the active context and creates child spans `mcp.tool:${name}`
+3. **Context Propagation**: All operations within the tool callback inherit the proper trace context
+4. **No Manual Span Management**: Individual tools don't need to create or manage spans manually
+
+### Benefits
+
+1. **Automatic Hierarchy**: Parent-child span relationships are established automatically
+2. **Zero Manual Work**: Individual tools don't need span management code
+3. **Consistent Tracing**: Every tool gets proper instrumentation without code duplication
+4. **Error Handling**: Exception recording and span status management is centralized
+5. **Context Inheritance**: All async operations within tools inherit the correct trace context
+
+## Adding Custom Span Attributes
+
+Since the wrapper creates an active span context, you can easily add custom attributes in your tool implementations:
+
+```typescript
+tool('create_workflow', 'Create a workflow', { model: z.string() }, async ({ model }) => {
+  // Get the active span (created by the wrapper)
   const span = trace.getSpan(context.active());
   if (span) {
-    span.setAttribute('mcp.tool', 'create_workflow');
-    span.setAttribute('model.name', modelName);
-    span.setAttribute('api.name', apiName);
-    span.setAttribute('workflow.type', args.workflowType);
+    span.setAttribute('model.name', model);
+    span.setAttribute('operation.category', 'workflow');
   }
 
   // Perform the actual work
-  const result = await createWorkflow(args);
+  const result = await createWorkflow({ model });
   return `Workflow created: ${result.id}`;
 });
 ```
 
-### Option 2: Add Default Attributes in Instrumentation
-
-If you want certain attributes added automatically for every tool without changing your application code, you can modify the instrumentation itself. In `McpInstrumentation`'s wrapper around `server.tool()`, you can set attributes before calling the user's callback:
-
-```typescript
-// Inside the wrapped callback in McpInstrumentation
-const tracer = instrumentation.tracer;
-const span = tracer.startSpan(`mcp.tool:${name}`);
-span.setAttribute('mcp.tool', name);
-
-// Optionally capture common metadata from args or extra
-if (args?.model) {
-  span.setAttribute('model.name', args.model);
-}
-if (extra?.caller) {
-  span.setAttribute('caller', extra.caller);
-}
-
-return context.with(trace.setSpan(context.active(), span), async () => {
-  // Call the original callback and handle status/errors...
-});
-```
-
-### Which Approach to Use?
-
-- **Per-tool attributes (Option 1)** give you maximum flexibility, as you can compute attributes using local variables and know exactly when they should be added.
-
-- **Instrumentation-level defaults (Option 2)** are useful for metadata that is always available and consistent (like the tool name). It keeps your application callbacks clean but is limited to information that your instrumentation can see.
-
-You can combine both approaches: set default attributes in the instrumentation and add specialized attributes in the application where needed. Either way, you're simply calling `span.setAttribute(key, value)` on the active span – OpenTelemetry will include those values in the trace export.
-
 ## Example Trace Output
 
-When your MCP tools are called, you'll see traces like:
+With the tool wrapper pattern, you'll see properly structured traces:
 
 ```
-mcp.tool:calculate
-  ├── Duration: 45ms
-  ├── Status: OK
-  └── Attributes: tool execution details
+Tool.get_environment_info (Parent Span - from wrapper)
+  ├── mcp.tool:get_environment_info (Child Span - from McpInstrumentation)
+  │   ├── Duration: 45ms
+  │   ├── Status: OK
+  │   └── Attributes: tool execution details
+  └── Additional child spans from API calls...
 
-mcp.tool:search_files
-  ├── Duration: 120ms
-  ├── Status: ERROR
-  └── Exception: FileNotFoundError
+Tool.execute_dql (Parent Span - from wrapper)
+  ├── mcp.tool:execute_dql (Child Span - from McpInstrumentation)
+  │   ├── Duration: 120ms
+  │   ├── Status: ERROR
+  │   └── Exception: QuerySyntaxError
+  └── Additional context...
 ```
 
 ## Requirements
@@ -184,7 +231,23 @@ If you were previously setting up OpenTelemetry manually:
    ```
    
 4. Set the required environment variables
-5. Restart your application
+5. Implement the tool wrapper pattern for proper span hierarchy
+6. Restart your application
+
+## Best Practices
+
+### Tool Wrapper Implementation
+
+- Create the wrapper once and reuse it for all tools
+- Include essential attributes like tool name and arguments
+- Let McpInstrumentation handle the detailed MCP-specific instrumentation
+- Add custom attributes within tool callbacks as needed
+
+### Error Handling
+
+- The wrapper handles top-level errors and span status
+- Individual tools should focus on business logic
+- Thrown exceptions are automatically recorded and propagated
 
 ## License
 

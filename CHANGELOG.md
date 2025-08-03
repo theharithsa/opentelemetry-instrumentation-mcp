@@ -1,47 +1,57 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. This
-project adheres to [Semantic Versioning](https://semver.org/).
+All notable changes to this project will be documented in this file.
 
-## [1.0.0] - 2025-01-XX
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.2] - 2025-08-04
 
 ### Added
 
-- **Comprehensive documentation** - Added detailed guide for enriching traces with custom span attributes
-- **Dual attribute approach** - Documented both application-level and instrumentation-level methods for adding span attributes
-- **Best practices guide** - Included recommendations on when to use each attribute approach
-- **Production-ready status** - Marking the package as stable with 1.0.0 release
+- Documentation for parent span stitching solution using tool wrapper pattern
+- Comprehensive examples of custom tool wrapper implementation
+- Detailed trace context propagation examples
+- Best practices section for tool wrapper implementation
+- Example trace output showing proper parent-child span hierarchy
 
 ### Changed
 
-- **Documentation enhancement** - Significantly improved README with detailed examples for span attribute management
-- **API stability** - Committed to stable API contract with semantic versioning
+- Updated README with detailed parent span stitching implementation
+- Enhanced documentation for maintaining trace context in MCP tool executions
+- Improved examples showing how wrapper creates parent spans automatically
+- Clarified that individual tools don't need manual span management
 
-## [0.2.0] - 2025-08-02
+### Documentation
 
-### Added
+- Added production-ready tool wrapper pattern based on real implementation
+- Enhanced troubleshooting section for span context issues
+- Updated migration guide to include tool wrapper pattern implementation
+- Documented benefits of automatic hierarchy establishment
 
-- **Automatic SDK registration** – introduced a new register entry point that boots the NodeSDK and registers both the default OpenTelemetry auto‑instrumentations and the custom McpInstrumentation. Consumers can now simply add `import '@theharithsa/opentelemetry-instrumentation-mcp/register'` at the top of their application to enable tracing without writing their own otel.ts setup.
-
-- **Environment‑based configuration** – the new register module reads `OTEL_EXPORTER_OTLP_ENDPOINT` and `DYNATRACE_API_TOKEN` environment variables to configure the OTLP exporter, making it easy to point traces at a Dynatrace backend without code changes.
-
-- **Active span access** – documented how to access the active span in tool callbacks via `trace.getSpan(context.active())`, allowing application code to attach arbitrary attributes (e.g. model name, API name) to the span.
-
-### Changed
-
-- **Package exports** – updated package.json to expose a `./register` sub‑path and mark it as a side effect. This ensures bundlers do not tree‑shake the register module and allows consumers to import it directly.
-
-- **Version bump** – incremented the version number from 0.1.x to 0.2.0 to reflect the addition of the new register API.
-
-### Removed
-
-- **Manual span boilerplate** – with the introduction of register, users no longer need to create their own otel.ts file or manually start the OpenTelemetry SDK. Manual span creation around each tool callback is optional; the custom instrumentation now handles starting and finishing spans for all tool invocations.
-
-## [0.1.0] - Initial Release
+## [1.0.1] - 2024-08-03
 
 ### Added
 
-- **Basic MCP instrumentation** - Core instrumentation for Model Context Protocol tool calls
-- **Manual setup support** - Basic integration with OpenTelemetry NodeSDK
-- **Span creation** - Automatic span generation for MCP tool invocations
-- **Error tracking** - Exception recording and error status marking
+- Initial stable release
+- Automatic MCP tool instrumentation
+- OTLP export support
+- Auto-registration capability
+
+### Features
+
+- Zero-configuration OpenTelemetry setup
+- Built-in error handling and span status management
+- Comprehensive span attribute collection
+- Production-ready stability
+
+## [1.0.0] - 2024-08-03
+
+### Added
+
+- Initial release of OpenTelemetry instrumentation for MCP
+- Basic tool call tracing
+- Error tracking and span status management
+- NodeSDK integration
+- Error tracking and span status management
+- NodeSDK integration

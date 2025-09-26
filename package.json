@@ -1,6 +1,6 @@
 {
   "name": "@theharithsa/opentelemetry-instrumentation-mcp",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A package to auto instrument the Model Context Protocol (MCP) SDK with OpenTelemetry",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

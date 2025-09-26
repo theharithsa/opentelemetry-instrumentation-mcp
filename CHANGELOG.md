@@ -5,7 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.3] - 2025-01-XX
+## [1.0.4] - 2025-09-26
+
+### Changed
+
+- **BREAKING**: Removed deprecated `DYNATRACE_API_TOKEN` environment variable support
+- Enhanced `OTEL_EXPORTER_OTLP_HEADERS` parsing with improved error handling and validation
+- Added validation warnings when Authorization header is missing
+- Improved header parsing robustness with better error messages
+
+### Removed
+
+- Fallback support for `DYNATRACE_API_TOKEN` environment variable
+- Deprecation warning console messages for `DYNATRACE_API_TOKEN`
+
+### Fixed
+
+- Better handling of malformed header formats in `OTEL_EXPORTER_OTLP_HEADERS`
+- More reliable header parsing for edge cases (empty keys, missing equals signs)
+- Added proper logging for successful header parsing
+
+### Migration Guide
+
+If you were still using the deprecated `DYNATRACE_API_TOKEN`, you must now use:
+
+```bash
+OTEL_EXPORTER_OTLP_HEADERS=Authorization=Api-Token your-token-here
+```
+
+## [1.0.3] - 2025-07-15
 
 ### Added
 

@@ -1,4 +1,4 @@
-# OpenTelemetry Instrumentation for Model Context Protocol (MCP)
+﻿# OpenTelemetry Instrumentation for Model Context Protocol (MCP)
 
 [![npm version](https://badge.fury.io/js/@theharithsa%2Fopentelemetry-instrumentation-mcp.svg)](https://www.npmjs.com/package/@theharithsa/opentelemetry-instrumentation-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/@theharithsa/opentelemetry-instrumentation-mcp.svg)](https://www.npmjs.com/package/@theharithsa/opentelemetry-instrumentation-mcp)
@@ -274,5 +274,3 @@ See [CHANGELOG.md](./CHANGELOG.md) for detailed version history and breaking cha
 ## Contributing
 
 Issues and pull requests are welcome on [GitHub](https://github.com/theharithsa/opentelemetry-instrumentation-mcp).
- 
- 

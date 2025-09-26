@@ -273,5 +273,6 @@ See [CHANGELOG.md](./CHANGELOG.md) for detailed version history and breaking cha
 
 ## Contributing
 
-Issues and pull requests are welcome on [GitHub](https://github.com/theharithsa/opentelemetry-instrumentation-mcp). 
+Issues and pull requests are welcome on [GitHub](https://github.com/theharithsa/opentelemetry-instrumentation-mcp).
+ 
  

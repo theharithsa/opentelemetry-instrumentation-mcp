@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2025-01-XX
+
+### Added
+
+- Support for standard OpenTelemetry `OTEL_EXPORTER_OTLP_HEADERS` environment variable
+- Header parsing functionality for comma-separated key=value pairs
+- Backward compatibility warning for deprecated `DYNATRACE_API_TOKEN`
+
+### Changed
+
+- **BREAKING**: Recommended authentication method changed from `DYNATRACE_API_TOKEN` to `OTEL_EXPORTER_OTLP_HEADERS`
+- Updated documentation to show standard OpenTelemetry header configuration
+- Enhanced header parsing to handle multiple headers and values containing equals signs
+
+### Deprecated
+
+- `DYNATRACE_API_TOKEN` environment variable (still supported for backward compatibility)
+
+### Migration Guide
+
+Replace:
+
+```bash
+DYNATRACE_API_TOKEN=your-token-here
+```
+
+With:
+
+```bash
+OTEL_EXPORTER_OTLP_HEADERS=Authorization=Api-Token your-token-here
+```
+
 ## [1.0.2] - 2025-08-04
 
 ### Added

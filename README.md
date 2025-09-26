@@ -68,8 +68,20 @@ When using the auto-registration approach, configure these environment variables
 # Required: OTLP endpoint for trace export
 OTEL_EXPORTER_OTLP_ENDPOINT=https://your-dynatrace-endpoint.com/api/v2/otlp/v1/traces
 
-# Required: Dynatrace API token for authentication
-DYNATRACE_API_TOKEN=your-dynatrace-api-token
+# Required: OTLP headers including authorization
+OTEL_EXPORTER_OTLP_HEADERS=Authorization=Api-Token <Token>
+```
+
+### Header Format
+
+The `OTEL_EXPORTER_OTLP_HEADERS` environment variable supports comma-separated key=value pairs:
+
+```bash
+# Single header
+OTEL_EXPORTER_OTLP_HEADERS=Authorization=Api-Token your-token-here
+
+# Multiple headers
+OTEL_EXPORTER_OTLP_HEADERS=Authorization=Api-Token your-token,Custom-Header=value,Another=header-value
 ```
 
 ## What Gets Instrumented
@@ -188,7 +200,7 @@ tool('create_workflow', 'Create a workflow', { model: z.string() }, async ({ mod
 
 With the tool wrapper pattern, you'll see properly structured traces:
 
-```
+```text
 Tool.get_environment_info (Parent Span - from wrapper)
   ├── mcp.tool:get_environment_info (Child Span - from McpInstrumentation)
   │   ├── Duration: 45ms
@@ -212,7 +224,7 @@ Tool.execute_dql (Parent Span - from wrapper)
 
 ## Package Structure
 
-```
+```text
 @theharithsa/opentelemetry-instrumentation-mcp/
 ├── index.js          # McpInstrumentation class
 └── register.js       # Auto-registration with NodeSDK

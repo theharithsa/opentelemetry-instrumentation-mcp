@@ -7,7 +7,9 @@
 
 Automatic OpenTelemetry instrumentation for the Model Context Protocol SDK, enabling observability and telemetry collection for MCP-based applications with zero configuration required.
 
-**Version 1.0.2** - Production ready with stable API and parent span stitching solution.
+**Version 1.0.4** - Production ready with enhanced OTEL headers parsing and streamlined configuration.
+
+> **🆕 What's New in v1.0.4:** Removed deprecated `DYNATRACE_API_TOKEN` support for cleaner configuration. Now uses only standard OpenTelemetry `OTEL_EXPORTER_OTLP_HEADERS` with improved parsing and validation.
 
 ## Features
 
@@ -271,4 +273,5 @@ See [CHANGELOG.md](./CHANGELOG.md) for detailed version history and breaking cha
 
 ## Contributing
 
-Issues and pull requests are welcome on [GitHub](https://github.com/theharithsa/opentelemetry-instrumentation-mcp).
+Issues and pull requests are welcome on [GitHub](https://github.com/theharithsa/opentelemetry-instrumentation-mcp). 
+ 
